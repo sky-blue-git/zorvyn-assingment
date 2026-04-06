@@ -8,7 +8,6 @@ const registerSchema = z.object({
   name: z.string().min(2),
   email: z.string().email(),
   password: z.string().min(6),
-  role: z.enum(["Viewer", "Analyst", "Admin"]).optional(),
 });
 
 const loginSchema = z.object({
@@ -18,7 +17,7 @@ const loginSchema = z.object({
 
 // Generate JWT
 const generateToken = (id) => {
-  return jwt.sign({ id }, process.env.JWT_SECRET || "fallback_secret", {
+  return jwt.sign({ id }, process.env.JWT_SECRET, {
     expiresIn: "30d",
   });
 };
@@ -27,7 +26,7 @@ export const registerUser = async (req, res, next) => {
   try {
     const validatedData = registerSchema.parse(req.body);
 
-    const { name, email, password, role } = validatedData;
+    const { name, email, password } = validatedData;
 
     const userExists = await User.findOne({ email });
 
@@ -43,7 +42,7 @@ export const registerUser = async (req, res, next) => {
       name,
       email,
       password: hashedPassword,
-      role: role || "Viewer",
+      role: "Viewer",
     });
 
     if (user) {
@@ -61,7 +60,7 @@ export const registerUser = async (req, res, next) => {
   } catch (error) {
     if (error instanceof z.ZodError) {
       res.status(400);
-      return next(new Error(error.errors.map(e => e.message).join(", ")));
+      return next(new Error(error.errors.map((e) => e.message).join(", ")));
     }
     next(error);
   }
@@ -95,7 +94,7 @@ export const loginUser = async (req, res, next) => {
   } catch (error) {
     if (error instanceof z.ZodError) {
       res.status(400);
-      return next(new Error(error.errors.map(e => e.message).join(", ")));
+      return next(new Error(error.errors.map((e) => e.message).join(", ")));
     }
     next(error);
   }

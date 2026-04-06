@@ -6,6 +6,11 @@ import authRoutes from "./routes/authRoutes.js";
 import recordRoutes from "./routes/recordRoutes.js";
 import dashboardRoutes from "./routes/dashboardRoutes.js";
 
+if (!process.env.JWT_SECRET) {
+  console.error("FATAL ERROR: JWT_SECRET is not defined in .env file.");
+  process.exit(1);
+}
+
 const app = express();
 app.use(express.json());
 
