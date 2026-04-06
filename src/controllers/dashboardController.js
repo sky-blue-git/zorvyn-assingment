@@ -1,8 +1,15 @@
 import Record from "../models/Record.js";
+import { z } from "zod";
+
+const dashboardQuerySchema = z.object({
+  startDate: z.string().refine((val) => !isNaN(Date.parse(val)), "Invalid startDate format").optional(),
+  endDate: z.string().refine((val) => !isNaN(Date.parse(val)), "Invalid endDate format").optional(),
+});
 
 export const getDashboardSummary = async (req, res, next) => {
   try {
-    const { startDate, endDate } = req.query;
+    const validatedQuery = dashboardQuerySchema.parse(req.query);
+    const { startDate, endDate } = validatedQuery;
 
     const matchStage = { isDeleted: false };
 

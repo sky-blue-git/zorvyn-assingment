@@ -9,6 +9,15 @@ const recordSchema = z.object({
   notes: z.string().optional(),
 });
 
+const querySchema = z.object({
+  page: z.coerce.number().int().positive().default(1),
+  limit: z.coerce.number().int().positive().max(100).default(10),
+  type: z.enum(["income", "expense"]).optional(),
+  category: z.string().optional(),
+  startDate: z.string().refine((val) => !isNaN(Date.parse(val)), "Invalid startDate format").optional(),
+  endDate: z.string().refine((val) => !isNaN(Date.parse(val)), "Invalid endDate format").optional(),
+});
+
 export const createRecord = async (req, res, next) => {
   try {
     const validatedData = recordSchema.parse(req.body);
@@ -30,7 +39,8 @@ export const createRecord = async (req, res, next) => {
 
 export const getRecords = async (req, res, next) => {
   try {
-    const { type, category, startDate, endDate, page = 1, limit = 10 } = req.query;
+    const validatedQuery = querySchema.parse(req.query);
+    const { type, category, startDate, endDate, page, limit } = validatedQuery;
 
     const query = { isDeleted: false };
     if (type) query.type = type;
@@ -59,6 +69,10 @@ export const getRecords = async (req, res, next) => {
       data: records,
     });
   } catch (error) {
+    if (error instanceof z.ZodError) {
+      res.status(400);
+      return next(new Error(error.errors.map((e) => e.message).join(", ")));
+    }
     next(error);
   }
 };

@@ -6,14 +6,15 @@ import {
 } from "../controllers/userController.js";
 import { protect } from "../middleware/authMiddleware.js";
 import { authorizeRoles } from "../middleware/roleMiddleware.js";
+import { validateObjectId } from "../middleware/validateObjectId.js";
 
 const router = express.Router();
 
 router.use(protect);
-router.use(authorizeRoles("Admin")); // Only admins can access User management
+router.use(authorizeRoles("Admin")); // Only admins can access user management
 
 router.get("/", getUsers);
-router.put("/:id/role", updateUserRole);
-router.put("/:id/status", updateUserStatus);
+router.put("/:id/role", validateObjectId, updateUserRole);
+router.put("/:id/status", validateObjectId, updateUserStatus);
 
 export default router;

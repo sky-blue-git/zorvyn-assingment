@@ -8,6 +8,7 @@ import {
 } from "../controllers/recordController.js";
 import { protect } from "../middleware/authMiddleware.js";
 import { authorizeRoles } from "../middleware/roleMiddleware.js";
+import { validateObjectId } from "../middleware/validateObjectId.js";
 
 const router = express.Router();
 
@@ -16,11 +17,11 @@ router.use(protect);
 
 // Analysts & Admins can view records
 router.get("/", authorizeRoles("Analyst", "Admin"), getRecords);
-router.get("/:id", authorizeRoles("Analyst", "Admin"), getRecordById);
+router.get("/:id", authorizeRoles("Analyst", "Admin"), validateObjectId, getRecordById);
 
 // Only Admins can modify records
 router.post("/", authorizeRoles("Admin"), createRecord);
-router.put("/:id", authorizeRoles("Admin"), updateRecord);
-router.delete("/:id", authorizeRoles("Admin"), deleteRecord);
+router.put("/:id", authorizeRoles("Admin"), validateObjectId, updateRecord);
+router.delete("/:id", authorizeRoles("Admin"), validateObjectId, deleteRecord);
 
 export default router;
