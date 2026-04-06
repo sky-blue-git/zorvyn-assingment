@@ -20,7 +20,7 @@ export const getDashboardSummary = async (req, res, next) => {
     }
 
     // Parallel aggregation queries for performance
-    const [totals, categoryTotals, recentActivity] = await Promise.all([
+    const [totals, categoryTotals, recentActivity, monthlyTrends] = await Promise.all([
       // 1. Total Income & Expenses
       Record.aggregate([
         { $match: matchStage },
@@ -48,6 +48,24 @@ export const getDashboardSummary = async (req, res, next) => {
         .sort({ date: -1 })
         .limit(5)
         .populate("createdBy", "name email"),
+
+      // 4. Monthly Trends
+      Record.aggregate([
+        { $match: matchStage },
+        {
+          $group: {
+            _id: {
+              year: { $year: "$date" },
+              month: { $month: "$date" },
+              type: "$type",
+            },
+            totalAmount: { $sum: "$amount" },
+          },
+        },
+        {
+          $sort: { "_id.year": 1, "_id.month": 1 },
+        },
+      ]),
     ]);
 
     // Format Totals
@@ -70,6 +88,14 @@ export const getDashboardSummary = async (req, res, next) => {
       .filter((c) => c._id.type === "income")
       .map((c) => ({ category: c._id.category, amount: c.totalAmount }));
 
+    // Format Monthly Trends
+    const trends = {};
+    monthlyTrends.forEach((t) => {
+      const label = `${t._id.year}-${String(t._id.month).padStart(2, "0")}`;
+      if (!trends[label]) trends[label] = { income: 0, expense: 0 };
+      trends[label][t._id.type] = t.totalAmount;
+    });
+
     res.json({
       summary: {
         totalIncome,
@@ -81,6 +107,7 @@ export const getDashboardSummary = async (req, res, next) => {
         expenses: expensesByCategory,
       },
       recentActivity,
+      trends,
     });
   } catch (error) {
     next(error);

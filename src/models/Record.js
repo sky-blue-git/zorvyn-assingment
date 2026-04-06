@@ -38,4 +38,9 @@ const recordSchema = new mongoose.Schema(
   { timestamps: true }
 );
 
+// Performance compound indexes for analytical queries
+recordSchema.index({ createdBy: 1, date: -1 });
+recordSchema.index({ isDeleted: 1, type: 1 });
+recordSchema.index({ date: -1 });
+
 export default mongoose.model("Record", recordSchema);
