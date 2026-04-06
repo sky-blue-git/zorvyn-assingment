@@ -3,6 +3,7 @@ import "dotenv/config";
 import connectDB from "./config/db.js";
 import { errorHandler } from "./middleware/errorHandler.js";
 import authRoutes from "./routes/authRoutes.js";
+import recordRoutes from "./routes/recordRoutes.js";
 
 const app = express();
 app.use(express.json());
@@ -12,6 +13,7 @@ connectDB();
 app.get("/", (req, res) => res.send("Server is Running"));
 
 app.use("/api/auth", authRoutes);
+app.use("/api/records", recordRoutes);
 
 app.use(errorHandler);
 
